@@ -36,7 +36,11 @@
 <h3>
 <a id="background" class="anchor" href="#background" aria-hidden="true"><span class="octicon octicon-link"></span></a>Background</h3>
 
-<p>TBD</p>
+<p>Modern data analysis (especially of neural data) often involves data with 100+ dimensions which are difficult to analyze as-is. To makes sense of this high dimensional data we often assume it comes from a much lower dimensional data. To find this lower dimensional data we perform one of several dimensionality reduction algorithms such as Factor Analysis.</p>
+
+<p>There are already several tools available for performing factor analysis, however we're unaware of any which scale well when the data we're interested in doesn't fit in memory on a single machine. However, with newer methods of data collection such as optogenetic methods we're easily able to collect datasets on the order of 100GB-1TB.</p>
+
+<p>Thunder is a data analysis framework built on top of Apache Spark designed for working with these kinds of datasets. The idea behind using Thunder is that if we can keep the data we're interested in distributed across the main memory of several machines and avoid reading and writing to disk then we can perform analyses much in much less time.</p>
 
 <h3>
 <a id="the-challenge" class="anchor" href="#the-challenge" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Challenge</h3>
