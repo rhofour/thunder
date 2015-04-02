@@ -14,6 +14,12 @@ Large-scale neural data analysis with Spark - [project page](http://freeman-lab.
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/thunder-project/thunder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Stories in Ready](https://badge.waffle.io/thunder-project/thunder.png?label=ready&title=Ready)](https://waffle.io/thunder-project/thunder)
 
+About (Factor Analysis Projecct)
+-----
+We aim to add Factor Analysis to Thunder for a CMU 15-418 project.
+
+[Project Proposal](https://rhofour.github.io/thunder/)
+
 About
 -----
 
