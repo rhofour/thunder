@@ -2,7 +2,7 @@
 Utilities for generating example datasets
 """
 
-from numpy import array, random, shape, floor, dot, linspace, sin, sign, c_, matrix
+from numpy import array, c_, dot, floor, linspace, matrix, random, shape, sin, sign
 
 from thunder.rdds.matrices import RowMatrix
 from thunder.rdds.series import Series
