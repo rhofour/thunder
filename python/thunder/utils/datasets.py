@@ -2,7 +2,7 @@
 Utilities for generating example datasets
 """
 
-from numpy import array, random, shape, floor, dot, linspace, sin, sign, c_
+from numpy import array, random, shape, floor, dot, linspace, sin, sign, c_, matrix
 
 from thunder.rdds.matrices import RowMatrix
 from thunder.rdds.series import Series
@@ -62,6 +62,31 @@ class PCAData(DataSets):
         else:
             return data
 
+class FAData(DataSets):
+
+    # q < p
+    # nrows = n
+    def generate(self, q=2, p=5, nrows=1000, npartitions=10, seed=None):
+        random.seed(seed)
+        # Generate factor loadings (n x q)
+        F = matrix(random.randn(nrows, q))
+        # Generate factor scores (q x p)
+        w = matrix(random.randn(q, p))
+        # Generate non-zero the error covariances (1 x p)
+        sigmas = random.randn(1, p)
+        # Generate the error terms (n x p)
+        # (each row gets scaled by our sigmas)
+        epsilon = random.randn(nrows, p) * sigmas
+        # Combine this to get our actual data (n x p)
+        x = (F * w) + epsilon
+        # Put the data in an RDD
+        data = RowMatrix(self.sc.parallelize(appendKeys(x), npartitions))
+
+        if self.returnParams is True:
+            return data, F, w, epsilon 
+        else:
+            return data
+
 
 class ICAData(DataSets):
 
@@ -85,5 +110,6 @@ class ICAData(DataSets):
 DATASET_MAKERS = {
     'kmeans': KMeansData,
     'pca': PCAData,
+    'fa': FAData,
     'ica': ICAData
 }

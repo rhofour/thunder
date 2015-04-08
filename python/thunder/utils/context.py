@@ -503,7 +503,7 @@ class ThunderContext():
         """
         Make an example data set for testing analyses.
 
-        Options include 'pca', 'kmeans', and 'ica'.
+        Options include 'pca', 'fa', 'kmeans', and 'ica'.
         See thunder.utils.datasets for detailed options.
 
         Parameters
@@ -517,7 +517,7 @@ class ThunderContext():
             Generated dataset
 
         """
-        checkParams(dataset, ['kmeans', 'pca', 'ica'])
+        checkParams(dataset, ['kmeans', 'pca', 'fa', 'ica'])
 
         return DataSets.make(self._sc, dataset, **opts)
 
