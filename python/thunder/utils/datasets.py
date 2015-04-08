@@ -64,21 +64,21 @@ class PCAData(DataSets):
 
 class FAData(DataSets):
 
-    """
-    Generate data from a factor analysis model
-
-    Parameters
-    ----------
-    q : int
-      The number of factors generating this data
-    p : int
-      The number of observed factors (p >= q)
-    nrows : int
-      Number of observations we have
-    sigmas = 1 x p ndarray
-      Scale of the noise to add
-    """
     def generate(self, q=1, p=3, nrows=50, npartitions=10, sigmas=None, seed=None):
+        """
+        Generate data from a factor analysis model
+
+        Parameters
+        ----------
+        q : int
+          The number of factors generating this data
+        p : int
+          The number of observed factors (p >= q)
+        nrows : int
+          Number of observations we have
+        sigmas = 1 x p ndarray
+          Scale of the noise to add
+        """
         random.seed(seed)
         # Generate factor loadings (n x q)
         F = matrix(random.randn(nrows, q))
