@@ -64,9 +64,19 @@ class PCAData(DataSets):
 
 class FAData(DataSets):
 
-    # q < p
-    # nrows = n
-    def generate(self, q=2, p=5, nrows=1000, npartitions=10, seed=None):
+    """
+    Generate data from a factor analysis model
+
+    Parameters
+    ----------
+    q : int
+      The number of factors generating this data
+    p : int
+      The number of observed factors (p >= q)
+    nrows : int
+      Number of observations we have
+    """
+    def generate(self, q=1, p=3, nrows=50, npartitions=10, seed=None):
         random.seed(seed)
         # Generate factor loadings (n x q)
         F = matrix(random.randn(nrows, q))
