@@ -75,15 +75,18 @@ class FAData(DataSets):
       The number of observed factors (p >= q)
     nrows : int
       Number of observations we have
+    sigmas = 1 x p ndarray
+      Scale of the noise to add
     """
-    def generate(self, q=1, p=3, nrows=50, npartitions=10, seed=None):
+    def generate(self, q=1, p=3, nrows=50, npartitions=10, sigmas=None, seed=None):
         random.seed(seed)
         # Generate factor loadings (n x q)
         F = matrix(random.randn(nrows, q))
         # Generate factor scores (q x p)
         w = matrix(random.randn(q, p))
         # Generate non-zero the error covariances (1 x p)
-        sigmas = random.randn(1, p)
+        if sigmas is None:
+          sigmas = random.randn(1, p)
         # Generate the error terms (n x p)
         # (each row gets scaled by our sigmas)
         epsilon = random.randn(nrows, p) * sigmas
