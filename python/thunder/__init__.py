@@ -1,6 +1,7 @@
 # analyses
 from thunder.decoding.uniclassify import MassUnivariateClassifier
 from thunder.decoding.uniclassify import GaussNaiveBayesClassifier, TTestClassifier
+from thunder.factorization.lu import LU
 from thunder.factorization.pca import PCA
 from thunder.factorization.svd import SVD
 from thunder.factorization.ica import ICA
