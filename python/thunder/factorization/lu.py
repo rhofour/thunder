@@ -55,5 +55,17 @@ class LU(object):
           self.p = RowMatrix(mat.rdd.context.parallelize(enumerate(p)))
           self.l = RowMatrix(mat.rdd.context.parallelize(enumerate(l)))
           self.u = RowMatrix(mat.rdd.context.parallelize(enumerate(u)))
+          return self
 
-        return self
+        mat = mat.keysToIndices()
+        halfRows = mat.nrows / 2
+        aTop = mat.filterOnKeys(lambda k: k < halfRows)
+        a1 = aTop.between(0, halfRows - 1)
+        a2 = aTop.between(halfRows, mat.ncols)
+        aBot = mat.filterOnKeys(lambda k: k >= halfRows)
+        a3 = aBot.between(0, halfRows - 1)
+        a4 = aBot.between(halfRows, mat.ncols)
+
+        lup1 = LU(nb=self.nb).calc(a1)
+
+        return self, a1
