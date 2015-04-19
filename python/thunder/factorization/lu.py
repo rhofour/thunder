@@ -63,10 +63,10 @@ class LU(object):
         aTop = mat.filterOnKeys(lambda k: k < halfRows)
         a1 = aTop.between(0, halfRows - 1)
         a2 = aTop.between(halfRows, mat.ncols)
-        aBot = mat.filterOnKeys(lambda k: k >= halfRows)
+        aBot = mat.filterOnKeys(lambda k: k >= halfRows).keysToIndices()
         a3 = aBot.between(0, halfRows - 1)
         a4 = aBot.between(halfRows, mat.ncols)
 
         lup1 = LU(nb=self.nb).calc(a1)
 
-        return self, a1
+        return self, a1, a2, a3, a4
