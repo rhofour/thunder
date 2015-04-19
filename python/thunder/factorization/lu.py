@@ -29,6 +29,15 @@ class LU(object):
         self.l = None
         self.u = None
 
+    def _permute(self, p, mat):
+        """
+        Given permutation vector and RowMatrix, permute the matrix.
+
+        Assumes the matrix RDD's keys are its rows' 0-indexed indices,
+        and does NOT sort the RDD by key afterward.
+        """
+        return mat.applyKeys(lambda x: p.item(x))
+
     def calc(self, mat):
         """
         Calculate LU-decomposition using a recursive block method with pivoting
