@@ -16,8 +16,8 @@ class LU(object):
 
     Attributes
     ----------
-    `l` : RowMatrix, n x n
-        A pivot matrix
+    `p` : matrix, n x 1
+        The indices from a permutation matrix
     `l` : RowMatrix, n x n
         Lower triangular matrix
     `u` : RowMatrix, n x n
@@ -43,6 +43,7 @@ class LU(object):
         self : returns an instance of self.
         """
 
+        from numpy import arange, matrix
         from scipy.linalg import lu
 
         if not (isinstance(mat, RowMatrix)):
@@ -51,8 +52,8 @@ class LU(object):
           raise Exception('Input matrix must be square')
 
         if mat.nrows <= self.nb:
-          p, l, u = lu(mat.collectValuesAsArray())
-          self.p = RowMatrix(mat.rdd.context.parallelize(enumerate(p)))
+          p, l, u = lu(mat.collectValuesAsArray(), overwrite_a=True, permute_l=False)
+          self.p = p * matrix(arange(0, len(p))).transpose()
           self.l = RowMatrix(mat.rdd.context.parallelize(enumerate(l)))
           self.u = RowMatrix(mat.rdd.context.parallelize(enumerate(u)))
           return self
