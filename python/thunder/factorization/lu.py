@@ -77,5 +77,7 @@ class LU(object):
         a4 = aBot.between(halfRows, mat.ncols)
 
         lup1 = LU(nb=self.nb).calc(a1)
+        # Permute a1 using p1
+        a1 = self.permute(lup1.p, a1)
 
         return self, a1, a2, a3, a4
