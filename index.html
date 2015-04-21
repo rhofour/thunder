@@ -29,36 +29,28 @@
       </header>
       <section>
         <h1>
-<a id="factor-analysis-in-thunder-a-cmu-15-418-final-project" class="anchor" href="#factor-analysis-in-thunder-a-cmu-15-418-final-project" aria-hidden="true"><span class="octicon octicon-link"></span></a>Factor Analysis in Thunder (A CMU 15-418 Final Project)</h1>
+<a id="matrix-inverse-in-thunder-a-cmu-15-418-final-project" class="anchor" href="#matrix-inverse-in-thunder-a-cmu-15-418-final-project" aria-hidden="true"><span class="octicon octicon-link"></span></a>Matrix Inverse in Thunder (A CMU 15-418 Final Project)</h1>
 
 <p><em>by Richard Alex Hofer (rhofer) and Owen Kahn (okahn)</em></p>
 
-<p>Our goal for this project is to implement factor analysis in the distributed machine learning framework Thunder.</p>
+<p>Our goal for this project is to implement distributed matrix inverse.</p>
+
+<p><em>Note: This was not our original project</em></p>
 
 <h2>
 <a id="background" class="anchor" href="#background" aria-hidden="true"><span class="octicon octicon-link"></span></a>Background</h2>
 
-<p>Modern data analysis (especially of neural data) often involves data with 100+ dimensions which are difficult to analyze as-is. To makes sense of this high dimensional data we often assume it comes from a much lower dimensional data. To find this lower dimensional data we perform one of several dimensionality reduction algorithms such as Factor Analysis.</p>
-
-<p>There are already several tools available for performing factor analysis, however we're unaware of any which scale well when the data we're interested in doesn't fit in memory on a single machine. However, with newer methods of data collection such as optogenetic methods we're easily able to collect datasets on the order of 100GB-1TB.</p>
-
-<p>Thunder is a data analysis framework built on top of Apache Spark designed for working with these kinds of datasets. The idea behind using Thunder is that if we can keep the data we're interested in distributed across the main memory of several machines and avoid reading and writing to disk then we can perform analyses much in much less time.</p>
+<p>Matrices are important. Lots of frameworks built on top of Spark provide distributed matrices and a few operations, but it appears that none of them offer a matrix inverse which can be very useful. This is likely a sign that it is a very difficult operation to implement and we probably should have paid more attention to this.</p>
 
 <h2>
 <a id="the-challenge" class="anchor" href="#the-challenge" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Challenge</h2>
 
-<p>While we believe using multiple machines to keep our data in memory will offer a substantial speed up to this algorithm, it will also significantly increases the communication costs we have.</p>
-
-<p>Another challenge we will face is in how to split this workload up among multiple machines. As far as we're aware there is no trivial way to divide the work when building a factor analysis model so we may have to devise several different ways to do this and figure out which works best.</p>
+<p>Matrix inverse does not distribute easily and computing any part of it generally requires access to many parts of the original matrix. This communication makes its implementation difficult when working with distributed matrices. It also does not lend itself well to Spark primitives.</p>
 
 <h2>
 <a id="resources" class="anchor" href="#resources" aria-hidden="true"><span class="octicon octicon-link"></span></a>Resources</h2>
 
-<p>Since our algorithm is being implemented inside of Thunder we definitely intend to take advantage of any Thunder or Spark primitives and functions which make our job easier.</p>
-
-<p>Ideally we hope to test our algorithm with real neural data from Prof. Byron Yu. However, if we're unable to get real data to test with we can easily generate synthetic data instead since factor analysis is a generative model.</p>
-
-<p>We have few requirements for the machines we test on so long as they can communicate reasonably quickly with each other and are able to read in our large dataset.</p>
+<p>We will test on Amazon EC2 because it is easy to deploy Thunder there and it allows us to easily test on many different cluster configurations.</p>
 
 <h2>
 <a id="goals-and-deliverables" class="anchor" href="#goals-and-deliverables" aria-hidden="true"><span class="octicon octicon-link"></span></a>Goals and Deliverables</h2>
@@ -66,47 +58,45 @@
 <h3>
 <a id="plan-to-achieve" class="anchor" href="#plan-to-achieve" aria-hidden="true"><span class="octicon octicon-link"></span></a>Plan to Achieve</h3>
 
-<p>An implementation of factor analysis in Thunder which is able to outperform an optimized implementation on a single machine when the data being analyzed doesn't fit in memory. We suspect any reasonably efficient implementation that keeps all of the data in memory will be able to achieve this because of the major increase in latency when reading from disk.</p>
+<p>A correct implementation of distributed matrix inverse which is faster than using a single machine (which would be forced to read and write from disk).</p>
 
 <h3>
 <a id="hope-to-achieve" class="anchor" href="#hope-to-achieve" aria-hidden="true"><span class="octicon octicon-link"></span></a>Hope to Achieve</h3>
 
-<p>Ideally we would like to see increasing speedup as we add more machines. This may be difficult to achieve as it requires additional communication, however it is conceivably that to a certain point adding additional machines could improve performance if all of them are able to do significant work.</p>
+<p>Ideally we would like to be competitive with the implementation provided by the paper we our working from.</p>
 
 <h2>
 <a id="platform-choice" class="anchor" href="#platform-choice" aria-hidden="true"><span class="octicon octicon-link"></span></a>Platform Choice</h2>
 
-<p>As discussed in Resources we can implement this on either EC2, Latedays, or some other cluster.</p>
-
-<p>Building our algorithm on top of Thunder is a reasonable choice because Thunder was specifically made for efficiently running neural data analysis algorithms like Factor Analysis.</p>
+<p>As discussed in Resources we will use Amazon EC2.</p>
 
 <h2>
 <a id="schedule" class="anchor" href="#schedule" aria-hidden="true"><span class="octicon octicon-link"></span></a>Schedule</h2>
 
-<p>April  2</p>
+<p>April  25</p>
 
 <ul>
-<li>Have our proposal submitted ✓</li>
+<li>Have a correct implementation</li>
 </ul>
 
-<p>April  5</p>
+<p>May 2</p>
 
 <ul>
-<li>Have Thunder built successfully on our local machines ✓</li>
+<li>Successfully deploy our implementation and the reference implementation to EC2</li>
+<li>Develop a set of tests and collect data</li>
+<li>Graph our running time vs. the reference running time</li>
 </ul>
 
-<p>April 12</p>
+<p>May 6</p>
 
 <ul>
-<li>Have a clear plan on which implementation of factor analysis we hope to pursue</li>
-<li>Have an optimized single-machine algorithm setup (not implemented by us)</li>
-<li>Have started on our actual implementation</li>
+<li>Develop hypotheses as to where bottlenecks are and how we can reduce/eliminate them</li>
 </ul>
 
-<p>April 19</p>
+<p>May 9</p>
 
 <ul>
-<li>Have our algorithm correctly implemented (though possibly not performant)</li>
+<li>Implement some improvements and record the change in running time on our test cases</li>
 </ul>
       </section>
       <footer>
