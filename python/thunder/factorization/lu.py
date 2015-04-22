@@ -52,7 +52,7 @@ class LU(object):
         self : returns an instance of self.
         """
 
-        from numpy import arange, matrix
+        from numpy import arange, matrix, vdot, zeros, ones
         from scipy.linalg import lu
 
         if not (isinstance(mat, RowMatrix)):
@@ -60,6 +60,8 @@ class LU(object):
         if not (mat.nrows == mat.ncols):
           raise Exception('Input matrix must be square')
 
+        # Do all the computation on the master node if everything is small
+        # enough
         if mat.nrows <= self.nb:
           p, l, u = lu(mat.collectValuesAsArray(), overwrite_a=True, permute_l=False)
           self.p = p * matrix(arange(0, len(p))).transpose()
@@ -77,7 +79,32 @@ class LU(object):
         a4 = aBot.between(halfRows, mat.ncols)
 
         lup1 = LU(nb=self.nb).calc(a1)
-        # Permute a1 using p1
-        a1 = self.permute(lup1.p, a1)
 
-        return self, a1, a2, a3, a4
+        # Permute A1 and A2 using P1
+        a1 = self._permute(lup1.p, a1)
+        a2 = self._permute(lup1.p, a2)
+
+        # Take the transpose of A2
+        a2t = a2.transpose(replaceKeys=False)
+
+        nA2Rows = a2.nrows # Store this so we don't query to RDD inside of applyValues
+        # Combine values of A2T with empty rows that will become U2T
+        a2t_u2t = a2t.applyValues(lambda x: (x, ones(nA2Rows)))
+
+        def computeElementFactory(l1Row, colIdx):
+          # This is a horrible hack because Python closures are late binding
+          def computeElement(pairedRows):
+            (a2tRow, u2tRow) = pairedRows
+            x = (1.0 / l1Row.value[colIdx.value]) * (a2tRow[colIdx.value] - vdot(l1Row.value, u2tRow))
+            u2tRow[colIdx.value] = x
+            return (a2tRow, u2tRow)
+          return computeElement
+        for i in xrange(nA2Rows):
+          l1Row = mat.rdd.context.broadcast(lup1.l.get(i))
+          colIdx = mat.rdd.context.broadcast(i)
+          a2t_u2t = a2t_u2t.applyValues(computeElementFactory(l1Row, colIdx))
+
+        # Extract the U2T rows
+        u2t = a2t_u2t.applyValues(lambda x: x[1])
+
+        return self, a1, a2, a3, a4, lup1, u2t
