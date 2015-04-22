@@ -301,7 +301,7 @@ class RowMatrix(Series):
           add(col1, col2, col1)
           return col1
         transposeRdd = coords.aggregateByKey(zeros(nrows), addCoord, combCols)
-        return RowMatrix(transposeRdd)
+        return RowMatrix(transposeRdd.sortByKey())
 
 def matrixSumIterator_self(iterator):
     yield sum(outer(x, x) for x in iterator)
