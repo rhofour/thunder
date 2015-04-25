@@ -20,8 +20,8 @@ class LU(object):
         The indices from a permutation matrix
     `l` : RowMatrix, n x n
         Lower triangular matrix
-    `u` : RowMatrix, n x n
-        Upper triangular matrix
+    `ut` : RowMatrix, n x n
+        The transpose of an upper triangular matrix
     """
     def __init__(self, nb=3200):
         self.nb = nb
@@ -88,7 +88,8 @@ class LU(object):
           p, l, u = lu(mat.collectValuesAsArray(), overwrite_a=True, permute_l=False)
           self.p = p * matrix(arange(0, len(p))).transpose()
           self.l = RowMatrix(mat.rdd.context.parallelize(enumerate(l), mat.rdd.getNumPartitions()))
-          self.u = RowMatrix(mat.rdd.context.parallelize(enumerate(u), mat.rdd.getNumPartitions()))
+          ut = u.transpose()
+          self.ut = RowMatrix(mat.rdd.context.parallelize(enumerate(ut), mat.rdd.getNumPartitions()))
           return self
 
         mat = mat.keysToIndices()
