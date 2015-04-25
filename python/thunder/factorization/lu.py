@@ -60,6 +60,15 @@ class LU(object):
         resRdd = prod.flatMap(computeElems).aggregateByKey(zeros(nrows), addCoord, combCols)
         return RowMatrix(resRdd)
 
+    def _minus(self, a, b):
+        """
+        Given a RowMatrix A, and RowMatrix B, compute A - B
+
+        Assumes the matrix RDD's keys are its rows' 0-indexed indices
+        """
+        from numpy import subtract
+        return RowMatrix(a.rdd.join(b.rdd).mapValues(lambda (a, b): subtract(a, b)))
+
     def calc(self, mat):
         """
         Calculate LU-decomposition using a recursive block method with pivoting
