@@ -161,4 +161,7 @@ class LU(object):
         l2p.repartition(mat.rdd.getNumPartitions())
         l2p.rdd = l2p.rdd.sortByKey()
 
-        return self, a1, a2, a3, a4, lup1, u2t, l2p
+        lup2 = LU(nb=self.nb).calc(self._minus(a4, self._times(l2p, u2t)))
+        l2 = self._permute(lup2.p, l2p)
+
+        return self, a1, a2, a3, a4, lup1, u2t, l2, lup2
