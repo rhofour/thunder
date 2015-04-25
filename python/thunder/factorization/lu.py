@@ -52,7 +52,7 @@ class LU(object):
         self : returns an instance of self.
         """
 
-        from numpy import arange, matrix, vdot, zeros, ones
+        from numpy import arange, matrix, vdot, zeros
         from scipy.linalg import lu
 
         if not (isinstance(mat, RowMatrix)):
@@ -65,8 +65,8 @@ class LU(object):
         if mat.nrows <= self.nb:
           p, l, u = lu(mat.collectValuesAsArray(), overwrite_a=True, permute_l=False)
           self.p = p * matrix(arange(0, len(p))).transpose()
-          self.l = RowMatrix(mat.rdd.context.parallelize(enumerate(l)))
-          self.u = RowMatrix(mat.rdd.context.parallelize(enumerate(u)))
+          self.l = RowMatrix(mat.rdd.context.parallelize(enumerate(l), mat.rdd.getNumPartitions()))
+          self.u = RowMatrix(mat.rdd.context.parallelize(enumerate(u), mat.rdd.getNumPartitions()))
           return self
 
         mat = mat.keysToIndices()
@@ -85,11 +85,12 @@ class LU(object):
         a2 = self._permute(lup1.p, a2)
 
         # Take the transpose of A2
+        a2.rdd = a2.rdd.sortByKey() # Fix the order of A2 first
         a2t = a2.transpose(replaceKeys=False)
 
         nA2Rows = a2.nrows # Store this so we don't query to RDD inside of applyValues
         # Combine values of A2T with empty rows that will become U2T
-        a2t_u2t = a2t.applyValues(lambda x: (x, ones(nA2Rows)))
+        a2t_u2t = a2t.applyValues(lambda x: (x, zeros(nA2Rows)))
 
         def computeElementFactory(l1Row, colIdx):
           # This is a horrible hack because Python closures are late binding
@@ -106,5 +107,7 @@ class LU(object):
 
         # Extract the U2T rows
         u2t = a2t_u2t.applyValues(lambda x: x[1])
+        u2t.repartition(mat.rdd.getNumPartitions())
+        u2t.rdd = u2t.rdd.sortByKey()
 
         return self, a1, a2, a3, a4, lup1, u2t
