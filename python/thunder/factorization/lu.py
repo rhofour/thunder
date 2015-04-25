@@ -20,8 +20,8 @@ class LU(object):
         The indices from a permutation matrix
     `l` : RowMatrix, n x n
         Lower triangular matrix
-    `u` : RowMatrix, n x n
-        Upper triangular matrix
+    `ut` : RowMatrix, n x n
+        The transpose of an upper triangular matrix
     """
     def __init__(self, nb=3200):
         self.nb = nb
