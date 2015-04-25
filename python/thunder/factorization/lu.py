@@ -38,6 +38,28 @@ class LU(object):
         """
         return mat.applyKeys(lambda x: p.item(x))
 
+    def _times(self, a, b):
+        """
+        Given a RowMatrix A and RowMatrix B, compute A*B^T
+
+        Assumes the matrix RDD's keys are its rows' 0-indexed indices
+        """
+        from numpy import add, vdot, zeros
+        nrows = a.nrows
+        glommedA = a.rdd.glom()
+        glommedB = b.rdd.glom()
+        prod = glommedA.cartesian(glommedB)
+        def computeElems(x):
+          return [(ai, (bi, vdot(ar, br))) for (ai, ar) in x[0] for (bi, br) in x[1]]
+        def addCoord(col, x):
+          col[x[0]] = x[1]
+          return col
+        def combCols(col1, col2):
+          add(col1, col2, col1)
+          return col1
+        resRdd = prod.flatMap(computeElems).aggregateByKey(zeros(nrows), addCoord, combCols)
+        return RowMatrix(resRdd)
+
     def calc(self, mat):
         """
         Calculate LU-decomposition using a recursive block method with pivoting
