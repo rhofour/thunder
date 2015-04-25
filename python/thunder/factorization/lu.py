@@ -88,7 +88,8 @@ class LU(object):
           p, l, u = lu(mat.collectValuesAsArray(), overwrite_a=True, permute_l=False)
           self.p = p * matrix(arange(0, len(p))).transpose()
           self.l = RowMatrix(mat.rdd.context.parallelize(enumerate(l), mat.rdd.getNumPartitions()))
-          self.u = RowMatrix(mat.rdd.context.parallelize(enumerate(u), mat.rdd.getNumPartitions()))
+          ut = u.transpose()
+          self.ut = RowMatrix(mat.rdd.context.parallelize(enumerate(ut), mat.rdd.getNumPartitions()))
           return self
 
         mat = mat.keysToIndices()
@@ -132,4 +133,23 @@ class LU(object):
         u2t.repartition(mat.rdd.getNumPartitions())
         u2t.rdd = u2t.rdd.sortByKey()
 
-        return self, a1, a2, a3, a4, lup1, u2t
+        nA3Cols = a3.ncols
+        a3_l2p = a3.applyValues(lambda x: (x, zeros(nA3Cols)))
+
+        def computeElementFactory(u1tRow, colIdx):
+          def computeElement(pairedRows):
+            (a3Row, l2pRow) = pairedRows
+            x = (1.0 / u1tRow.value[colIdx.value]) * (a3Row[colIdx.value] - vdot(l2pRow, u1tRow.value))
+            l2pRow[colIdx.value] = x
+            return (a3Row, l2pRow)
+          return computeElement
+        for i in xrange(nA3Cols):
+          u1tRow = mat.rdd.context.broadcast(lup1.ut.get(i))
+          colIdx = mat.rdd.context.broadcast(i)
+          a3_l2p = a3_l2p.applyValues(computeElementFactory(u1tRow, colIdx))
+
+        l2p = a3_l2p.applyValues(lambda x: x[1])
+        l2p.repartition(mat.rdd.getNumPartitions())
+        l2p.rdd = l2p.rdd.sortByKey()
+
+        return self, a1, a2, a3, a4, lup1, u2t, l2p
