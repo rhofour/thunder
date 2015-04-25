@@ -296,9 +296,14 @@ class Data(object):
         """
         return self.rdd.keys()
 
-    def keysToIndices(self):
+    def keysToIndices(self, start=0):
         """
         Replace the keys with one-dimensional indices from 0 to n
+
+        Parameters
+        ----------
+        start : int, optional, default = 0
+            Where to start indexing from
 
         Returns a new Data object
         """
@@ -306,7 +311,7 @@ class Data(object):
         # First get the sizes of the partitions
         counts = self.rdd.mapPartitions(getSize).collect()
         # Get the starting indices of each partition
-        counts.insert(0, 0)
+        counts.insert(0, start)
         starts = self.rdd.context.broadcast(cumsum(counts)[0:-1])
         # Replace the keys
         def replaceKeys(index, iterator):
