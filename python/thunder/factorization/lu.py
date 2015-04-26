@@ -33,6 +33,8 @@ class LU(object):
         """
         Given permutation vector and RowMatrix, permute the matrix.
 
+        If p[i] = j, the i'th row of mat is the j'th row of the result.
+
         Assumes the matrix RDD's keys are its rows' 0-indexed indices,
         and does NOT sort the RDD by key afterward.
         """
@@ -95,9 +97,10 @@ class LU(object):
         # enough
         if mat.nrows <= self.nb:
           p, l, u = lu(mat.collectValuesAsArray(), overwrite_a=True, permute_l=False)
-          # scipy computes A = P L U, we want P A = L U so we use p transpose
-          # here
-          self.p = p.transpose() * matrix(arange(0, len(p))).transpose()
+          # scipy computes A = P L U, we want P A = L U.
+          # However, because of our notational choice in _permuteRows,
+          # p need not be inverted.
+          self.p = p.dot(arange(0, len(p)))
           self.l = RowMatrix(mat.rdd.context.parallelize(enumerate(l), mat.rdd.getNumPartitions()))
           ut = u.transpose()
           self.ut = RowMatrix(mat.rdd.context.parallelize(enumerate(ut), mat.rdd.getNumPartitions()))
