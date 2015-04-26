@@ -27,7 +27,8 @@ class LU(object):
         self.nb = nb
         self.p = None
         self.l = None
-        self.u = None
+        self.ut = None
+        self.a = None
 
     def _permute(self, p, mat):
         """
@@ -83,7 +84,7 @@ class LU(object):
         self : returns an instance of self.
         """
 
-        from numpy import arange, matrix, vdot, zeros
+        from numpy import arange, concatenate, matrix, vdot, zeros
         from scipy.linalg import lu
 
         if not (isinstance(mat, RowMatrix)):
@@ -163,5 +164,16 @@ class LU(object):
 
         lup2 = LU(nb=self.nb).calc(self._minus(a4, self._times(l2p, u2t)))
         l2 = self._permute(lup2.p, l2p)
+
+        # Construct our final results
+        self.p = concatenate((lup1.p, lup2.p))
+        ncols = a2.ncols
+        self.l = RowMatrix(lup1.l.rdd.mapValues(lambda x: concatenate((x, zeros(ncols)))).union(
+            l2.rdd.join(lup2.l.rdd).map(lambda (k,v): (k+halfRows, concatenate(v)))))
+        nrows = a3.nrows
+        #self.ut = RowMatrix(lup1.ut.rdd.mapValues(lambda x: concatenate((x, zeros(nrows)))).union(
+        #    u2t.rdd.join(lup2.ut.rdd).map(lambda (k,v): (k+halfRows, concatenate(v)))))
+        self.ut = RowMatrix(lup1.ut.rdd)
+        self.a = RowMatrix(lup1.ut.rdd)
 
         return self, a1, a2, a3, a4, lup1, u2t, l2, lup2
