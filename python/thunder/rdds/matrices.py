@@ -268,6 +268,45 @@ class RowMatrix(Series):
         """
         return RowMatrix.elementwise(self, other, divide)
 
+    def inverse(self):
+        """
+        Compute the inverse of a distributed matrix.
+
+        This requires the matrix to be square and non-singular.
+        """
+        if self.nrows != self.ncols:
+            raise Exception("Cannot invert a non-square matrix (" + str(self.nrows) +
+                ", " + str(self.ncols) + ")")
+
+        from thunder.factorization.lu import LU
+        from numpy import zeros
+
+        def computeLowerTriangularMatrixInverseTranspose(mat):
+            # First calculate the diagonal elements
+            def calcDiagonal((k, v)):
+              x = zeros(len(v))
+              x[k] = 1.0 / v[k]
+              return x
+            resRdd = mat.rdd.map(calcDiagonal)
+            # Now we fill in the remaining elements
+            def computeElementFactory(matRow, colIdx):
+              # This is a horrible hack because Python closures are late binding
+              def computeElement(row):
+                if(row >= colIdx.value):
+                  return row
+                x = (-1.0 / matRow.value[colIdx.value]) * vdot(row, matRow.value)
+                row[colIdx.value] = x
+                return row
+              return computeElement
+            #for i in xrange(mat.nrows):
+            #  matRow = mat.rdd.context.broadcast(mat.get(i))
+            #  colIdx = mat.rdd.context.broadcast(i)
+            #  resRdd = resRdd.mapValues(computeElementFactory(matRow, colIdx))
+            return RowMatrix(resRdd)
+        lu = LU().calc(self)
+        lInvT = computeLowerTriangularMatrixInverseTranspose(lu.l)
+        return lInvT
+
     def transpose(self, replaceKeys=True):
         """
         Transpose the matrix
