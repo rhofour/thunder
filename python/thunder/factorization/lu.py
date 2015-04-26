@@ -170,7 +170,7 @@ class LU(object):
         l2 = self._permuteRows(lup2.p, l2p)
 
         # Construct our final results
-        self.p = concatenate((lup1.p, lup2.p))
+        self.p = concatenate((lup1.p, (lup2.p + halfRows)))
         ncols = a2.ncols
         self.l = RowMatrix(lup1.l.rdd.mapValues(lambda x: concatenate((x, zeros(ncols)))).union(
             l2.rdd.join(lup2.l.rdd).map(lambda (k,v): (k+halfRows, concatenate(v)))))
