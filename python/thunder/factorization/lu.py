@@ -29,7 +29,7 @@ class LU(object):
         self.l = None
         self.ut = None
 
-    def _permute(self, p, mat):
+    def _permuteRows(self, p, mat):
         """
         Given permutation vector and RowMatrix, permute the matrix.
 
@@ -95,7 +95,9 @@ class LU(object):
         # enough
         if mat.nrows <= self.nb:
           p, l, u = lu(mat.collectValuesAsArray(), overwrite_a=True, permute_l=False)
-          self.p = p * matrix(arange(0, len(p))).transpose()
+          # scipy computes A = P L U, we want P A = L U so we use p transpose
+          # here
+          self.p = p.transpose() * matrix(arange(0, len(p))).transpose()
           self.l = RowMatrix(mat.rdd.context.parallelize(enumerate(l), mat.rdd.getNumPartitions()))
           ut = u.transpose()
           self.ut = RowMatrix(mat.rdd.context.parallelize(enumerate(ut), mat.rdd.getNumPartitions()))
@@ -113,8 +115,8 @@ class LU(object):
         lup1 = LU(nb=self.nb).calc(a1)
 
         # Permute A1 and A2 using P1
-        a1 = self._permute(lup1.p, a1)
-        a2 = self._permute(lup1.p, a2)
+        a1 = self._permuteRows(lup1.p, a1)
+        a2 = self._permuteRows(lup1.p, a2)
 
         # Take the transpose of A2
         a2.rdd = a2.rdd.sortByKey() # Fix the order of A2 first
@@ -162,7 +164,7 @@ class LU(object):
         l2p.rdd = l2p.rdd.sortByKey()
 
         lup2 = LU(nb=self.nb).calc(self._minus(a4, self._times(l2p, u2t)))
-        l2 = self._permute(lup2.p, l2p)
+        l2 = self._permuteRows(lup2.p, l2p)
 
         # Construct our final results
         self.p = concatenate((lup1.p, lup2.p))
