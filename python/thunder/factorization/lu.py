@@ -28,7 +28,6 @@ class LU(object):
         self.p = None
         self.l = None
         self.ut = None
-        self.a = None
 
     def _permute(self, p, mat):
         """
@@ -171,9 +170,7 @@ class LU(object):
         self.l = RowMatrix(lup1.l.rdd.mapValues(lambda x: concatenate((x, zeros(ncols)))).union(
             l2.rdd.join(lup2.l.rdd).map(lambda (k,v): (k+halfRows, concatenate(v)))))
         nrows = a3.nrows
-        #self.ut = RowMatrix(lup1.ut.rdd.mapValues(lambda x: concatenate((x, zeros(nrows)))).union(
-        #    u2t.rdd.join(lup2.ut.rdd).map(lambda (k,v): (k+halfRows, concatenate(v)))))
-        self.ut = RowMatrix(lup1.ut.rdd)
-        self.a = RowMatrix(lup1.ut.rdd)
+        self.ut = RowMatrix(lup1.ut.rdd.mapValues(lambda x: concatenate((x, zeros(nrows)))).union(
+            u2t.rdd.join(lup2.ut.rdd).map(lambda (k,v): (k+halfRows, concatenate(v)))))
 
         return self, a1, a2, a3, a4, lup1, u2t, l2, lup2
