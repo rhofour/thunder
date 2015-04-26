@@ -178,4 +178,4 @@ class LU(object):
         self.ut = RowMatrix(lup1.ut.rdd.mapValues(lambda x: concatenate((x, zeros(nrows)))).union(
             u2t.rdd.join(lup2.ut.rdd).map(lambda (k,v): (k+halfRows, concatenate(v)))))
 
-        return self, a1, a2, a3, a4, lup1, u2t, l2, lup2
+        return self
