@@ -279,33 +279,34 @@ class RowMatrix(Series):
                 ", " + str(self.ncols) + ")")
 
         from thunder.factorization.lu import LU
-        from numpy import zeros
+        from numpy import vdot, zeros
 
         def computeLowerTriangularMatrixInverseTranspose(mat):
             # First calculate the diagonal elements
             def calcDiagonal((k, v)):
               x = zeros(len(v))
               x[k] = 1.0 / v[k]
-              return x
+              return (k, x)
             resRdd = mat.rdd.map(calcDiagonal)
             # Now we fill in the remaining elements
             def computeElementFactory(matRow, colIdx):
               # This is a horrible hack because Python closures are late binding
-              def computeElement(row):
-                if(row >= colIdx.value):
-                  return row
+              def computeElement((rowIdx, row)):
+                if(rowIdx >= colIdx.value):
+                  return (rowIdx, row)
                 x = (-1.0 / matRow.value[colIdx.value]) * vdot(row, matRow.value)
                 row[colIdx.value] = x
-                return row
+                return (rowIdx, row)
               return computeElement
-            #for i in xrange(mat.nrows):
-            #  matRow = mat.rdd.context.broadcast(mat.get(i))
-            #  colIdx = mat.rdd.context.broadcast(i)
-            #  resRdd = resRdd.mapValues(computeElementFactory(matRow, colIdx))
+            for i in xrange(mat.nrows):
+              matRow = mat.rdd.context.broadcast(mat.get(i))
+              colIdx = mat.rdd.context.broadcast(i)
+              resRdd = resRdd.map(computeElementFactory(matRow, colIdx))
             return RowMatrix(resRdd)
         lu = LU().calc(self)
         lInvT = computeLowerTriangularMatrixInverseTranspose(lu.l)
-        return lInvT
+        uInv = computeLowerTriangularMatrixInverseTranspose(lu.ut)
+        return uInv, lInvT, lu.p
 
     def transpose(self, replaceKeys=True):
         """
