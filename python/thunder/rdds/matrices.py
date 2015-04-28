@@ -306,7 +306,9 @@ class RowMatrix(Series):
         lu = LU().calc(self)
         lInvT = computeLowerTriangularMatrixInverseTranspose(lu.l)
         uInv = computeLowerTriangularMatrixInverseTranspose(lu.ut)
-        return uInv, lInvT, lu.p
+        inv = LU()._permuteCols(lu.p, LU()._times(uInv, lInvT))
+        inv.rdd = inv.rdd.sortByKey()
+        return inv
 
     def transpose(self, replaceKeys=True):
         """
@@ -349,7 +351,3 @@ def matrixSumIterator_self(iterator):
 
 def matrixSumIterator_other(iterator):
     yield sum(outer(x, y) for x, y in iterator)
-
-
-
-

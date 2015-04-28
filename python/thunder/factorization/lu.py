@@ -31,7 +31,7 @@ class LU(object):
 
     def _permuteRows(self, p, mat):
         """
-        Given permutation vector and RowMatrix, permute the matrix.
+        Given permutation vector and RowMatrix, permute the rows of the matrix.
 
         If p[i] = j, the i'th row of mat is the j'th row of the result.
 
@@ -39,6 +39,15 @@ class LU(object):
         and does NOT sort the RDD by key afterward.
         """
         return mat.applyKeys(lambda x: p.item(x))
+
+    def _permuteCols(self, p, mat):
+        """
+        Given permutation vector and RowMatrix, permute the columns of the matrix.
+
+        If p[i] = j, the j'th column of mat is the i'th column of the result.
+        """
+        from numpy import take
+        return mat.applyValues(lambda x: take(x, p))
 
     def _times(self, a, b):
         """
@@ -100,7 +109,7 @@ class LU(object):
           # scipy computes A = P L U, we want P A = L U.
           # However, because of our notational choice in _permuteRows,
           # p need not be inverted.
-          self.p = p.dot(arange(0, len(p)))
+          self.p = p.astype('int64').dot(arange(0, len(p)))
           self.l = RowMatrix(mat.rdd.context.parallelize(enumerate(l), mat.rdd.getNumPartitions()))
           ut = u.transpose()
           self.ut = RowMatrix(mat.rdd.context.parallelize(enumerate(ut), mat.rdd.getNumPartitions()))
