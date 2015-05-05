@@ -58,6 +58,7 @@ class PCAData(DataSets):
         else:
             return data
 
+
 class FactorAnalysisData(DataSets):
 
     def generate(self, q=1, p=3, nrows=50, npartitions=10, sigmas=None, seed=None):
@@ -68,10 +69,13 @@ class FactorAnalysisData(DataSets):
         ----------
         q : int, optional, default = 1
           The number of factors generating this data
+
         p : int, optios, default = 3
           The number of observed factors (p >= q)
+
         nrows : int, optional, default = 50
           Number of observations we have
+
         sigmas = 1 x p ndarray, optional, default = None
           Scale of the noise to add, randomly generated
           from standard normal distribution if not given
@@ -96,6 +100,29 @@ class FactorAnalysisData(DataSets):
             return data, F, w, epsilon
         else:
             return data
+
+
+class RandomData(DataSets):
+
+    def generate(self, nrows=50, ncols=50, npartitions=10, seed=None):
+        """
+        Generate a matrix where every element is i.i.d. and drawn from a
+        standard normal distribution
+
+        Parameters
+        ----------
+        nrows : int, optional, default = 50
+          Number of columns in the generated matrix
+
+        nrows : int, optional, default = 50
+          Number of rows in the generated matrix
+        """
+        random.seed(seed)
+        # Generate the data
+        x = matrix(random.randn(nrows, ncols))
+        # Put the data into an RDD
+        data = RowMatrix(self.sc.parallelize(self.appendKeys(x), npartitions))
+        return data
 
 
 class ICAData(DataSets):
@@ -140,18 +167,20 @@ class SourcesData(DataSets):
             centers = asarray(centers)
             n = len(centers)
 
-        ts = [clip(random.randn(t), 0, inf) for i in range(0, n)]
-        ts = [gaussian_filter1d(vec, 10) for vec in ts] * 5
+        ts = [random.randn(t) for i in range(0, n)]
+        ts = clip(asarray([gaussian_filter1d(vec, 5) for vec in ts]), 0, 1)
+        for ii, tt in enumerate(ts):
+            ts[ii] = (tt / tt.max()) * 2
         allframes = []
         for tt in range(0, t):
             frame = zeros(dims)
             for nn in range(0, n):
                 base = zeros(dims)
-                base[centers[nn][1], centers[nn][0]] = 1
+                base[centers[nn][0], centers[nn][1]] = 1
                 img = gaussian_filter(base, sd)
                 img = img/max(img)
                 frame += img * ts[nn][tt]
-            frame += random.randn(dims[0], dims[1]) * noise
+            frame += clip(random.randn(dims[0], dims[1]) * noise, 0, inf)
             allframes.append(frame)
 
         def pointToCircle(center, radius):
@@ -172,6 +201,7 @@ DATASET_MAKERS = {
     'kmeans': KMeansData,
     'pca': PCAData,
     'factor': FactorAnalysisData,
+    'rand': RandomData,
     'ica': ICAData,
     'sources': SourcesData
 }

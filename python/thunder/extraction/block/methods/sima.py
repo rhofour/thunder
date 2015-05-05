@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from numpy import array, asarray, where
 
 from thunder.extraction.block.base import BlockMethod, BlockAlgorithm
@@ -6,24 +8,31 @@ from thunder.extraction.source import Source
 
 class BlockSIMA(BlockMethod):
 
-    def __init__(self, simaStrategy, **kwargs):
-        algorithm = SIMABlockAlgorithm(simaStrategy, **kwargs)
+    def __init__(self, simaStrategy=None, **kwargs):
+        algorithm = SIMABlockAlgorithm(simaStrategy=simaStrategy, **kwargs)
         super(self.__class__, self).__init__(algorithm, **kwargs)
 
 
 class SIMABlockAlgorithm(BlockAlgorithm):
     """
-    Find sources using a SIMA SegmentationStrategy.
+    Extract sources using a SIMA SegmentationStrategy.
 
     Parameters
     ----------
     simaStrategy : sima.segment.SegmentationStrategy
-        The particular strategy from SIMA to be used.
+        The strategy from SIMA to be used.
     """
-    def __init__(self, simaStrategy, **extra):
+    def __init__(self, simaStrategy=None, **extra):
+
+        import sima.segment
+
+        if not isinstance(simaStrategy, sima.segment.SegmentationStrategy):
+            raise TypeError("Must provide a SIMA segmentation strategy, got %s" % type(simaStrategy))
+
         self.strategy = simaStrategy
 
     def extract(self, block):
+
         import sima
 
         # reshape the block to (t, z, y, x, c)
@@ -43,7 +52,6 @@ class SIMABlockAlgorithm(BlockAlgorithm):
         coords = [asarray(where(array(roi))).T for roi in rois]
         if len(dims) == 3:
             coords = [c[:, 1:] for c in coords]
-        coords = [c[:, ::-1] for c in coords]
 
         # format the sources
         sources = [Source(c) for c in coords]
