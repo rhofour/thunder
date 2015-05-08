@@ -99,17 +99,14 @@
 <p>May 6</p>
 
 <ul>
-<li>Develop tests and upload to S3</li>
-<li>Setup benchmarking to compare performance</li>
-<li>Choose machine configurations for tests</li>
-<li>Run tests and make graphs</li>
+<li>Develop tests and upload to S3 ✓</li>
 </ul>
 
 <p>May 8</p>
 
 <ul>
-<li>Develop hypotheses as to where bottlenecks are and how we can reduce/eliminate them</li>
-<li>Implement some improvements and record the change in running time on our test cases</li>
+<li>Investigate unreasonable memory requirements (ongoing)</li>
+<li>Contact the Spark community to learn about Spark internals ✓</li>
 </ul>
 
 <p>May 10</p>
@@ -117,6 +114,11 @@
 <ul>
 <li>Have presentation prepared</li>
 </ul>
+
+<h2>
+<a id="results" class="anchor" href="#results" aria-hidden="true"><span class="octicon octicon-link"></span></a>Results</h2>
+
+<p>We have a correct implementation of inverse which falls apart if run on a larger cluster due to unidentified overhead internal to Spark. We're attempting to figure out why this occurs, but are having difficulties since we cannot find anyone who is doing a similar type of computation.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/rhofour">rhofour</a></p>
